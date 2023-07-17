@@ -1,0 +1,18 @@
+<ul class="nav flex-column h-auto">
+    <li class="nav-item">
+        <a class="nav-link{{ if eq .Page "/app" }} active{{ end }}" href="/app">Dashboard</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link{{ if eq .Page "/app/hosts" }} active{{ end }}" href="/app/hosts">Manage Hosts</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link{{ if eq .Page "/app/hosts" }} active{{ end }}" href="/app/servers">Manage Servers</a>
+    </li>
+    <hr />
+    <li class="nav-item">
+        <a class="nav-link{{ if eq .Page "/app/users" }} active{{ end }}" href="/app/users">Manage Access</a>
+    </li>
+    <li class="nav-item">
+    <a href="/logout"><button type="submit" class="btn btn-danger mt-3 ">Log out</button></a>
+    </li>
+</ul>

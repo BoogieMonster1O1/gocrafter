@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/session"
 	"github.com/gofiber/template/html/v2"
 	_ "github.com/lib/pq"
 	"gocrafter/handlers"
+	"gocrafter/handlers/middleware"
 	"log"
 	"net/http"
 	"os"
@@ -25,17 +27,17 @@ func main() {
 	})
 	app.Static("/static", "./static")
 
-	dbPool, err := initDatabase()
+	db, err := initDatabase()
 	if err != nil {
 		log.Fatal("Error initializing database", err)
 	}
-	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("db", dbPool)
-		return c.Next()
-	})
+	store := session.New()
+	app.Use("/app/**/*", middleware.SessionValidator(db, store))
 
 	app.Get("/login", handlers.LoginHandler)
-	app.Post("/login", handlers.LoginHandlerPost)
+	app.Post("/login", handlers.LoginHandlerPost(db, store))
+	app.Get("/app", handlers.DashboardHandler)
+	app.Get("/logout", handlers.LogoutHandler(store))
 
 	log.Fatal(app.Listen(":3000"))
 }
