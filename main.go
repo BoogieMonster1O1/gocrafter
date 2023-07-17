@@ -36,8 +36,10 @@ func main() {
 
 	app.Get("/login", handlers.LoginHandler)
 	app.Post("/login", handlers.LoginHandlerPost(db, store))
-	app.Get("/app", handlers.DashboardHandler)
 	app.Get("/logout", handlers.LogoutHandler(store))
+
+	app.Get("/app", handlers.DashboardHandler)
+	app.Get("/app/hosts", handlers.ManageHostsHandler(db, store))
 
 	log.Fatal(app.Listen(":3000"))
 }
