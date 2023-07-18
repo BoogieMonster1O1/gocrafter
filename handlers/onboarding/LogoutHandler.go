@@ -1,4 +1,4 @@
-package handlers
+package onboarding
 
 import (
 	"github.com/gofiber/fiber/v2"

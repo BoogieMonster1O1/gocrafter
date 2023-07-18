@@ -8,7 +8,10 @@ import (
 	"github.com/gofiber/template/html/v2"
 	_ "github.com/lib/pq"
 	"gocrafter/handlers"
+	"gocrafter/handlers/host"
 	"gocrafter/handlers/middleware"
+	"gocrafter/handlers/onboarding"
+	"gocrafter/handlers/server"
 	"log"
 	"net/http"
 	"os"
@@ -34,15 +37,19 @@ func main() {
 	store := session.New()
 	app.Use("/app/**/*", middleware.SessionValidator(db, store))
 
-	app.Get("/login", handlers.LoginHandler)
-	app.Post("/login", handlers.LoginHandlerPost(db, store))
-	app.Get("/logout", handlers.LogoutHandler(store))
+	app.Get("/login", onboarding.LoginHandler)
+	app.Post("/login", onboarding.LoginHandlerPost(db, store))
+	app.Get("/logout", onboarding.LogoutHandler(store))
 
 	app.Get("/app", handlers.DashboardHandler)
-	app.Get("/app/hosts", handlers.ManageHostsHandler(db, store))
-	app.Delete("/app/hosts/delete/:id", handlers.ManageHostsDeleteHandler(db, store))
-	app.Post("/app/hosts/create", handlers.ManageHostsPostHandler(db, store))
-	app.Patch("/app/hosts/edit/:id", handlers.ManageHostsPatchHandler(db, store))
+	app.Get("/app/hosts", host.ManageHostsHandler(db, store))
+	app.Delete("/app/hosts/delete/:id", host.ManageHostsDeleteHandler(db, store))
+	app.Post("/app/hosts/create", host.ManageHostsPostHandler(db, store))
+	app.Patch("/app/hosts/edit/:id", host.ManageHostsPatchHandler(db, store))
+	app.Get("/app/servers", server.ManageServersHandler(db, store))
+	app.Get("/app/servers/:id", server.ServerDashboardHandler(db, store))
+	app.Get("/app/servers/create", server.CreateServerHandler(db, store))
+	app.Get("/app/servers/import", server.ImportServerHandler(db, store))
 
 	log.Fatal(app.Listen(":3000"))
 }

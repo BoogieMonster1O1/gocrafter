@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage servers</title>
+    <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/c476813bb3.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 bg-light">
+            {{template "sidebar"}}
+        </div>
+        <div class="col-md-9">
+            <h1 class="mt-4">Manage servers</h1>
+            <div class="row-cols-2">
+                <a href="/app/servers/create" class="mr-5 mb-4">
+                    <button class="btn btn-primary mb-3">Create New Server</button>
+                </a>
+                <a href="/app/servers/import" class="mb-4">
+                    <button class="btn btn-secondary mb-3">Import Existing Server</button>
+                </a>
+            </div>
+            {{if .Servers}}
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>ID</th>
+                        <th>Host</th>
+                        <th>Path</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{range .Servers}}
+                        <tr>
+                            <td>{{.Name}}</td>
+                            <td>{{.ID}}</td>
+                            <td>{{.HostName}}</td>
+                            <td>{{.AbsolutePath}}</td>
+                            <td>
+                                <a href="/app/servers/{{.ID}}">
+                                    <button class="btn btn-primary" disabled>Control Panel</button>
+                                </a>
+                            </td>
+                        </tr>
+                    {{end}}
+                    </tbody>
+                </table>
+            {{else}}
+                <p>No servers</p>
+            {{end}}
+        </div>
+    </div>
+</div>
+
+<script src="/static/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
