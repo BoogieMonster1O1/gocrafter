@@ -22,7 +22,7 @@ func ManageHostsHandler(db *sql.DB, store *session.Store) fiber.Handler {
 
 		for rows.Next() {
 			var host data.Host
-			err := rows.Scan(&host.Name, &host.ID, &host.SSHHostname, &host.SSHPort, &host.IsLocal)
+			err := rows.Scan(&host.Name, &host.ID, &host.SSHHostname, &host.SSHPort, &host.IsLocal, &host.Status)
 			if err != nil {
 				log.Println(err)
 				return c.Redirect("/500.html")
@@ -40,5 +40,36 @@ func ManageHostsHandler(db *sql.DB, store *session.Store) fiber.Handler {
 			"Page":  "/app/hosts",
 			"Hosts": hosts,
 		})
+	}
+}
+
+func ManageHostsDeleteHandler(db *sql.DB, store *session.Store) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		id := c.Params("id")
+		if id == "" {
+			return c.Status(fiber.StatusBadRequest).SendString("Bad Request")
+		}
+
+		var isLocal bool
+		err := db.QueryRow("SELECT is_local FROM hosts WHERE id = $1", id).Scan(&isLocal)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return c.Status(fiber.StatusNotFound).SendString("Not Found")
+			}
+			log.Println(err.Error())
+			return c.Status(http.StatusInternalServerError).SendString("Internal Server Error")
+		}
+
+		if isLocal {
+			return c.Status(fiber.StatusForbidden).SendString("Cannot delete local host")
+		}
+
+		_, err = db.Exec("DELETE FROM hosts WHERE id = $1", id)
+		if err != nil {
+			log.Println(err.Error())
+			return c.Status(http.StatusInternalServerError).SendString("Internal Server Error")
+		}
+
+		return c.SendStatus(fiber.StatusResetContent)
 	}
 }

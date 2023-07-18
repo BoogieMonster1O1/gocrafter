@@ -8,4 +8,5 @@ type Host struct {
 	SSHHostname sql.NullString
 	SSHPort     sql.NullInt64
 	IsLocal     bool
+	Status      string
 }

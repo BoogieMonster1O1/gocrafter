@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Manage hosts</title>
@@ -21,6 +21,7 @@
                     <th>ID</th>
                     <th>SSH Hostname</th>
                     <th>SSH Port</th>
+                    <th>Status</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -43,6 +44,7 @@
                                 N/A
                             {{end}}
                         </td>
+                        <td>{{.Status}}</td>
                         <td>
                             {{if not .IsLocal}}
                             <button class="btn btn-danger delete-btn" data-id="{{.ID}}">Delete</button>
@@ -69,7 +71,7 @@
     });
 
     function deleteHost(hostID) {
-        fetch(`/app/hosts?id=${hostID}`, {
+        fetch(`/app/hosts/delete/${hostID}`, {
             method: 'DELETE',
         })
             .then((response) => {

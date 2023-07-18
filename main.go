@@ -40,6 +40,7 @@ func main() {
 
 	app.Get("/app", handlers.DashboardHandler)
 	app.Get("/app/hosts", handlers.ManageHostsHandler(db, store))
+	app.Delete("/app/hosts/delete/:id", handlers.ManageHostsDeleteHandler(db, store))
 
 	log.Fatal(app.Listen(":3000"))
 }
