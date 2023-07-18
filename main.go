@@ -41,6 +41,8 @@ func main() {
 	app.Get("/app", handlers.DashboardHandler)
 	app.Get("/app/hosts", handlers.ManageHostsHandler(db, store))
 	app.Delete("/app/hosts/delete/:id", handlers.ManageHostsDeleteHandler(db, store))
+	app.Post("/app/hosts/create", handlers.ManageHostsPostHandler(db, store))
+	app.Patch("/app/hosts/edit/:id", handlers.ManageHostsPatchHandler(db, store))
 
 	log.Fatal(app.Listen(":3000"))
 }

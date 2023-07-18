@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Manage hosts</title>
-    <link href="/static/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
 
@@ -14,6 +14,7 @@
         </div>
         <div class="col-md-9">
             <h1 class="mt-4">Manage hosts</h1>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addHostModal">Add New Host</button>
             <table class="table">
                 <thead>
                 <tr>
@@ -31,8 +32,8 @@
                         <td>{{.Name}}</td>
                         <td>{{.ID}}</td>
                         <td>
-                            {{if .SSHPort.Valid}}
-                                {{.SSHPort.Int64}}
+                            {{if .SSHHostname.Valid}}
+                                {{.SSHHostname.String}}
                             {{else}}
                                 N/A
                             {{end}}
@@ -47,15 +48,73 @@
                         <td>{{.Status}}</td>
                         <td>
                             {{if not .IsLocal}}
-                            <button class="btn btn-danger delete-btn" data-id="{{.ID}}">Delete</button>
+                                <button class="btn btn-danger delete-btn" data-id="{{.ID}}">Delete</button>
+                                <button class="btn btn-primary edit-btn" data-id="{{.ID}}" data-bs-toggle="modal" data-bs-target="#editHostModal{{.ID}}">Edit</button>
                             {{else}}
-                                <button class="btn btn-danger delete-btn" data-id="{{.ID}}" disabled>Delete</button>
+                                <button class="btn btn-danger" data-id="{{.ID}}" disabled>Delete</button>
+                                <button class="btn btn-primary" data-id="{{.ID}}" disabled>Edit</button>
                             {{end}}
                         </td>
                     </tr>
+                    <!-- Edit Host Modal -->
+                    <div class="modal fade" id="editHostModal{{.ID}}" tabindex="-1" aria-labelledby="editHostModalLabel{{.ID}}" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="editHostModalLabel{{.ID}}">Edit Host</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="editHostForm{{.ID}}">
+                                        <div class="mb-3">
+                                            <label for="nameEditInput{{.ID}}" class="form-label">Name</label>
+                                            <input type="text" class="form-control" id="nameEditInput{{.ID}}" placeholder="No name" value="{{.Name}}" required>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-primary" onclick="editHost('{{.ID}}')">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 {{end}}
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Host Modal -->
+<div class="modal fade" id="addHostModal" tabindex="-1" aria-labelledby="addHostModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addHostModalLabel">Add New Host</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addHostForm">
+                    <div class="mb-3">
+                        <label for="nameInput" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="nameInput" placeholder="No name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sshHostnameInput" class="form-label">SSH Hostname</label>
+                        <input type="text" class="form-control" id="sshHostnameInput" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sshPortInput" class="form-label">SSH Port</label>
+                        <input type="number" min="1" max="65535" value="22" class="form-control" id="sshPortInput">
+                    </div>
+                    <small>Please make sure to add the SSH key to the server before initializing.</small>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary" onclick="addHost()">Add Host</button>
+            </div>
         </div>
     </div>
 </div>
@@ -79,6 +138,50 @@
                     location.reload();
                 } else {
                     console.error('Failed to delete host');
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }
+
+    function addHost() {
+        const name = document.getElementById('nameInput').value.trim() || 'No name';
+        const sshHostname = document.getElementById('sshHostnameInput').value.trim();
+        const sshPort = document.getElementById('sshPortInput').value.trim();
+
+        const queryParams = new URLSearchParams({
+            name: name,
+            sshHostname: sshHostname,
+            sshPort: sshPort,
+        });
+
+        fetch(`/app/hosts/create?${queryParams}`, {
+            method: 'POST',
+        })
+            .then((response) => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    console.error('Failed to add host');
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }
+
+    function editHost(hostID) {
+        const name = document.getElementById('nameEditInput' + hostID).value.trim();
+
+        fetch(`/app/hosts/edit/${hostID}?name=${name}`, {
+            method: 'PATCH',
+        })
+            .then((response) => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    console.error('Failed to edit host');
                 }
             })
             .catch((error) => {

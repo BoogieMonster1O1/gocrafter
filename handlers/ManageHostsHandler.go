@@ -7,6 +7,7 @@ import (
 	"gocrafter/models/data"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func ManageHostsHandler(db *sql.DB, store *session.Store) fiber.Handler {
@@ -65,6 +66,48 @@ func ManageHostsDeleteHandler(db *sql.DB, store *session.Store) fiber.Handler {
 		}
 
 		_, err = db.Exec("DELETE FROM hosts WHERE id = $1", id)
+		if err != nil {
+			log.Println(err.Error())
+			return c.Status(http.StatusInternalServerError).SendString("Internal Server Error")
+		}
+
+		return c.SendStatus(fiber.StatusResetContent)
+	}
+}
+
+func ManageHostsPostHandler(db *sql.DB, store *session.Store) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		name := c.FormValue("name", "No name")
+		sshHostname := c.FormValue("sshHostname")
+		sshPort := c.FormValue("sshPort")
+		if sshHostname == "" || sshPort == "" {
+			return c.Status(fiber.StatusBadRequest).SendString("Bad Request")
+		}
+		sshPortNum, err := strconv.Atoi(sshPort)
+		if err != nil {
+			log.Println(err.Error())
+			return c.Status(fiber.StatusBadRequest).SendString("Bad Request")
+		}
+
+		_, err = db.Exec("INSERT INTO hosts (name, ssh_hostname, ssh_port, is_local) VALUES ($1, $2, $3, $4)", name, sshHostname, sshPortNum, false)
+		if err != nil {
+			log.Println(err.Error())
+			return c.Status(http.StatusInternalServerError).SendString("Internal Server Error")
+		}
+
+		return c.SendStatus(fiber.StatusResetContent)
+	}
+}
+
+func ManageHostsPatchHandler(db *sql.DB, store *session.Store) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		id := c.Params("id")
+		name := c.FormValue("name", "No name")
+		if name == "" {
+			return c.Status(fiber.StatusBadRequest).SendString("Bad Request")
+		}
+
+		_, err := db.Exec("UPDATE hosts SET name = $1 WHERE id = $2", name, id)
 		if err != nil {
 			log.Println(err.Error())
 			return c.Status(http.StatusInternalServerError).SendString("Internal Server Error")
