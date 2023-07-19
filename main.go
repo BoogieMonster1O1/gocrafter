@@ -43,13 +43,15 @@ func main() {
 
 	app.Get("/app", handlers.DashboardHandler)
 	app.Get("/app/hosts", host.ManageHostsHandler(db, store))
-	app.Delete("/app/hosts/delete/:id", host.ManageHostsDeleteHandler(db, store))
 	app.Post("/app/hosts/create", host.ManageHostsPostHandler(db, store))
-	app.Patch("/app/hosts/edit/:id", host.ManageHostsPatchHandler(db, store))
+	app.Delete("/app/hosts/:id/delete", host.ManageHostsDeleteHandler(db, store))
+	app.Patch("/app/hosts/:id/edit", host.ManageHostsPatchHandler(db, store))
+	app.Get("/app/hosts/:id/directory", host.DirectoryListingHandler(db, store))
 	app.Get("/app/servers", server.ManageServersHandler(db, store))
-	app.Get("/app/servers/:id", server.ServerDashboardHandler(db, store))
 	app.Get("/app/servers/create", server.CreateServerHandler(db, store))
+	app.Post("/app/servers/create", server.CreateServerPostHandler(db, store))
 	app.Get("/app/servers/import", server.ImportServerHandler(db, store))
+	app.Get("/app/servers/:id", server.ServerDashboardHandler(db, store))
 
 	log.Fatal(app.Listen(":3000"))
 }

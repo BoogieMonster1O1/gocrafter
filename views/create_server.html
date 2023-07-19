@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Server</title>
+    <link href="/static/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/c476813bb3.js" crossorigin="anonymous"></script>
+    <style>
+        #directoryListing {
+            height: 300px;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: whitesmoke;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .directoryItem {
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .directoryItem button {
+            flex-grow: 1;
+            text-align: left;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 bg-light">
+            {{template "sidebar"}}
+        </div>
+        <div class="col-md-9">
+            <h1 class="mt-4">Create new server</h1>
+            <form action="/app/servers/create" method="POST">
+                <div class="mb-3">
+                    <label for="nameInput" class="form-label">Server Name</label>
+                    <input type="text" class="form-control" id="nameInput" name="name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="pathInput" class="form-label">Server Path</label>
+                    <div id="directoryListing" class="flex-column"></div>
+                </div>
+                <div class="mb-3">
+                    <label for="hostSelect" class="form-label">Host</label>
+                    <select class="form-select" id="hostSelect" name="host" required>
+                        {{range .Hosts}}
+                            <option value="{{.ID}}">{{.Name}}</option>
+                        {{end}}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="versionSelect" class="form-label">Minecraft Version</label>
+                    <select class="form-select" id="versionSelect" name="version" required>
+                        {{range .Manifest.Versions}}
+                            {{if eq .Type "release"}}
+                                <option value="{{.ID}}">{{.ID}}</option>
+                            {{else if and (eq .Type "snapshot") (not $.ShowSnapshots)}}
+                                {{/* Skip snapshot versions if ShowSnapshots is false */}}
+                            {{end}}
+                        {{end}}
+                    </select>
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="showSnapshotsCheck">
+                    <label class="form-check-label" for="showSnapshotsCheck">Show Snapshots</label>
+                </div>
+                <button type="submit" class="btn btn-primary">Create</button>
+                <a href="/app/servers" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="/static/bootstrap/js/bootstrap.bundle.js"></script>
+<script>
+    const showSnapshotsCheck = document.getElementById('showSnapshotsCheck');
+    const versionSelect = document.getElementById('versionSelect');
+    const directoryListing = document.getElementById('directoryListing');
+
+    showSnapshotsCheck.addEventListener('change', () => {
+        versionSelect.innerHTML = '';
+        const showSnapshots = showSnapshotsCheck.checked;
+        const versions = {{ .Manifest.Versions }};
+        versions.forEach(version => {
+            if (version.Type === 'release' || (version.Type === 'snapshot' && showSnapshots)) {
+                const option = document.createElement('option');
+                option.value = version.ID;
+                option.text = version.ID;
+                versionSelect.appendChild(option);
+            }
+        });
+    });
+
+    function fetchDirectoryListing(hostId, path) {
+        fetch(`/app/hosts/${hostId}/directory?path=${encodeURIComponent(path)}`)
+            .then(response => response.json())
+            .then(data => {
+                let listingHtml = '';
+
+                if (!data) {
+                    data = [];
+                }
+
+                if (path !== '/') {
+                    const parentPath = path.substring(0, path.lastIndexOf('/'));
+                    listingHtml += `
+                        <div class="directoryItem">
+                            <button type="button" class="btn btn-secondary flex-fill" onclick="fetchDirectoryListing('${hostId}', '${parentPath}')">
+                                <i class="fas fa-folder"></i> ..
+                            </button>
+                        </div>
+                    `;
+                }
+
+                data.forEach(directory => {
+                    listingHtml += `
+                        <div class="directoryItem">
+                            <button type="button" class="btn btn-secondary flex-fill" onclick="fetchDirectoryListing('${hostId}', '${path}/${directory}')">
+                                <i class="fas fa-folder"></i> ${directory}
+                            </button>
+                        </div>
+                    `;
+                });
+
+                directoryListing.innerHTML = listingHtml;
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const hostSelect = document.getElementById('hostSelect');
+        const selectedHostId = hostSelect.value;
+
+        fetchDirectoryListing(selectedHostId, '/');
+    });
+</script>
+</body>
+</html>

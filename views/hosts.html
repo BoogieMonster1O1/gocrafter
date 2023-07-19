@@ -131,7 +131,7 @@
     });
 
     function deleteHost(hostID) {
-        fetch(`/app/hosts/delete/${hostID}`, {
+        fetch(`/app/hosts/${hostID}/delete`, {
             method: 'DELETE',
         })
             .then((response) => {
@@ -175,7 +175,7 @@
     function editHost(hostID) {
         const name = document.getElementById('nameEditInput' + hostID).value.trim();
 
-        fetch(`/app/hosts/edit/${hostID}?name=${name}`, {
+        fetch(`/app/hosts/${hostID}/edit?name=${name}`, {
             method: 'PATCH',
         })
             .then((response) => {
