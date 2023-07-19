@@ -9,6 +9,7 @@ import (
 	_ "github.com/lib/pq"
 	"gocrafter/handlers"
 	"gocrafter/handlers/host"
+	"gocrafter/handlers/keypair"
 	"gocrafter/handlers/middleware"
 	"gocrafter/handlers/onboarding"
 	"gocrafter/handlers/server"
@@ -42,6 +43,8 @@ func main() {
 	app.Get("/logout", onboarding.LogoutHandler(store))
 
 	app.Get("/app", handlers.DashboardHandler)
+	app.Get("/app/ssh-key", keypair.ViewSSHKeyHandler(db, store))
+	app.Delete("/app/ssh-key/invalidate", keypair.InvalidateSSHKeyHandler(db, store))
 	app.Get("/app/hosts", host.ManageHostsHandler(db, store))
 	app.Post("/app/hosts/create", host.ManageHostsPostHandler(db, store))
 	app.Delete("/app/hosts/:id/delete", host.ManageHostsDeleteHandler(db, store))

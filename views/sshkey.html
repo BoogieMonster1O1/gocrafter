@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link href="/static/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/c476813bb3.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 bg-light">
+            {{template "sidebar"}}
+        </div>
+        <div class="col-md-9">
+            <h1 class="mt-4">SSH Keys</h1>
+            <h2>For security reasons, the private key is not displayed</h2>
+            <br>
+            <p>Public Key</p>
+            <code>{{.PublicKey}}</code>
+            <br>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#invalidateModal">
+                Invalidate
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Invalidate Modal -->
+<div class="modal fade" id="invalidateModal" tabindex="-1" aria-labelledby="invalidateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="invalidateModalLabel">Invalidate SSH Key</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>This action is potentially destructive and will make your current key invalid. You will not be able to start up new hosts until you update them with the new key.</p>
+                <p>Please ensure you will update all servers with the new key as soon as possible.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmInvalidate">Invalidate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/bootstrap/js/bootstrap.bundle.js"></script>
+<script>
+    const confirmInvalidateBtn = document.getElementById('confirmInvalidate');
+
+    confirmInvalidateBtn.addEventListener('click', () => {
+        fetch('/app/ssh-key/invalidate', {
+            method: 'DELETE'
+        })
+            .then(response => {
+                if (response.ok) {
+                    location.reload(); // Reload the page upon successful request
+                } else {
+                    console.error('Failed to invalidate SSH key');
+                }
+            })
+            .catch(error => {
+                console.error('An error occurred during the request:', error);
+            });
+    });
+</script>
+</body>
+</html>
