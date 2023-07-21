@@ -45,7 +45,12 @@
                 </div>
                 <div class="mb-3">
                     <label for="pathInput" class="form-label">Server Path</label>
+                    <p id="pathOutput">/</p>
                     <div id="directoryListing" class="flex-column"></div>
+                    <div id="emptyDirectoryWarning" class="d-flex align-items-center mt-3">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        <span>Directory is not empty.</span>
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label for="hostSelect" class="form-label">Host</label>
@@ -83,22 +88,34 @@
     const showSnapshotsCheck = document.getElementById('showSnapshotsCheck');
     const versionSelect = document.getElementById('versionSelect');
     const directoryListing = document.getElementById('directoryListing');
+    const pathOutput = document.getElementById('pathOutput');
+    const emptyDirectoryWarning = document.getElementById('emptyDirectoryWarning');
+    const versions = [];
+    {{range .Manifest.Versions}}
+        versions.push({
+            id: '{{.ID}}',
+            type: '{{.Type}}'
+        });
+    {{end}}
 
     showSnapshotsCheck.addEventListener('change', () => {
         versionSelect.innerHTML = '';
         const showSnapshots = showSnapshotsCheck.checked;
-        const versions = {{ .Manifest.Versions }};
         versions.forEach(version => {
-            if (version.Type === 'release' || (version.Type === 'snapshot' && showSnapshots)) {
+            if (version.type === 'release' || (version.type === 'snapshot' && showSnapshots)) {
                 const option = document.createElement('option');
-                option.value = version.ID;
-                option.text = version.ID;
+                option.value = version.id;
+                option.text = version.id;
                 versionSelect.appendChild(option);
             }
         });
     });
 
     function fetchDirectoryListing(hostId, path) {
+        if (path.startsWith("//")) {
+            path = path.substring(1);
+        }
+
         fetch(`/app/hosts/${hostId}/directory?path=${encodeURIComponent(path)}`)
             .then(response => response.json())
             .then(data => {
@@ -119,17 +136,20 @@
                     `;
                 }
 
-                data.forEach(directory => {
+                data.filter(entry => entry.isDir).forEach(directoryEntry => {
                     listingHtml += `
                         <div class="directoryItem">
-                            <button type="button" class="btn btn-secondary flex-fill" onclick="fetchDirectoryListing('${hostId}', '${path}/${directory}')">
-                                <i class="fas fa-folder"></i> ${directory}
+                            <button type="button" class="btn btn-secondary flex-fill" onclick="fetchDirectoryListing('${hostId}', '${path}/${directoryEntry.path}')">
+                                <i class="fas fa-folder"></i> ${directoryEntry.path}
                             </button>
                         </div>
                     `;
                 });
 
                 directoryListing.innerHTML = listingHtml;
+                pathOutput.innerText = path;
+                emptyDirectoryWarning.classList.toggle('d-none', !data.length);
+                emptyDirectoryWarning.classList.toggle('d-flex', data.length);
             });
     }
 

@@ -18,10 +18,13 @@
             <h2>For security reasons, the private key is not displayed</h2>
             <br>
             <p>Public Key</p>
-            <code>{{.PublicKey}}</code>
+            <code id="publicKeyCode">{{.PublicKey}}</code>
             <br>
             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#invalidateModal">
                 Invalidate
+            </button>
+            <button type="button" class="btn btn-success ml-5" id="copyToClipboardBtn">
+                Copy to Clipboard
             </button>
         </div>
     </div>
@@ -64,6 +67,22 @@
             })
             .catch(error => {
                 console.error('An error occurred during the request:', error);
+            });
+    });
+
+    const copyToClipboardBtn = document.getElementById('copyToClipboardBtn');
+
+    copyToClipboardBtn.addEventListener('click', () => {
+        const publicKeyCode = document.getElementById('publicKeyCode');
+        const publicKeyText = publicKeyCode.innerText;
+
+        navigator.clipboard.writeText(publicKeyText)
+            .then(() => {
+                copyToClipboardBtn.innerText = "Copied!";
+                console.log('Public key copied to clipboard.');
+            })
+            .catch(err => {
+                console.error('Failed to copy public key:', err);
             });
     });
 </script>

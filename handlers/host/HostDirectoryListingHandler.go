@@ -22,24 +22,21 @@ func DirectoryListingHandler(db *sql.DB, store *session.Store) fiber.Handler {
 		isLocal := false
 		rows.Next()
 		err = rows.Scan(&isLocal)
-		rows.Next()
 		if err != nil {
 			log.Println(err)
 			return c.Status(http.StatusInternalServerError).SendString("Internal Server Error")
 		}
 
 		if !isLocal {
-			// TODO
 			return c.Status(http.StatusNotImplemented).SendString("[]")
 		}
 
-		children, err := lib.GetChildItems(path, false)
-
+		childItems, err := lib.GetChildItems(path)
 		if err != nil {
 			log.Println(err)
 			return c.Status(http.StatusInternalServerError).SendString("Internal Server Error")
 		}
 
-		return c.JSON(children)
+		return c.JSON(childItems)
 	}
 }
