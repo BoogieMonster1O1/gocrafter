@@ -52,7 +52,7 @@ func main() {
 	app.Get("/app/hosts/:id/directory", host.DirectoryListingHandler(db, store))
 	app.Get("/app/servers", server.ManageServersHandler(db, store))
 	app.Get("/app/servers/create", server.CreateServerHandler(db, store))
-	app.Post("/app/servers/create", server.CreateServerPostHandler(db, store))
+	app.Get("/app/servers/create/fabric", server.CreateFabricServerHandler(db, store))
 	app.Get("/app/servers/import", server.ImportServerHandler(db, store))
 	app.Get("/app/servers/:id", server.ServerDashboardHandler(db, store))
 

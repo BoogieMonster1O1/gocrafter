@@ -1,0 +1,21 @@
+#directoryListing {
+    height: 300px;
+    max-height: 300px;
+    overflow-y: auto;
+    background-color: whitesmoke;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.directoryItem {
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.directoryItem button {
+    flex-grow: 1;
+    text-align: left;
+    margin-right: 5px;
+}

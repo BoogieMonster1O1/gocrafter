@@ -1,12 +1,12 @@
 package lib
 
 import (
-	"gocrafter/models"
+	"gocrafter/models/data"
 	"os"
 )
 
-func GetChildItems(path string) ([]models.ChildItem, error) {
-	var children []models.ChildItem
+func GetChildItems(path string) ([]data.ChildItem, error) {
+	var children []data.ChildItem
 
 	files, err := os.ReadDir(path)
 	if err != nil {
@@ -14,7 +14,7 @@ func GetChildItems(path string) ([]models.ChildItem, error) {
 	}
 
 	for _, file := range files {
-		child := models.ChildItem{
+		child := data.ChildItem{
 			Path:  file.Name(),
 			IsDir: file.IsDir(),
 		}

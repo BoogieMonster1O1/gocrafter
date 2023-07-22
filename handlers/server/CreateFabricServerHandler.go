@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-func CreateServerHandler(db *sql.DB, store *session.Store) fiber.Handler {
+func CreateFabricServerHandler(db *sql.DB, store *session.Store) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		rows, err := db.Query("SELECT * FROM hosts")
 		if err != nil {
@@ -26,13 +26,13 @@ func CreateServerHandler(db *sql.DB, store *session.Store) fiber.Handler {
 			err := rows.Scan(&host.Name, &host.ID, &host.SSHHostname, &host.SSHPort, &host.IsLocal, &host.Status)
 			if err != nil {
 				log.Println(err)
-				return c.Redirect("/500.html")
+				return c.Status(http.StatusInternalServerError).SendString("Internal Server Error")
 			}
 
 			hosts = append(hosts, host)
 		}
 
-		return c.Render("create_server", fiber.Map{
+		return c.Render("create_fabric_server", fiber.Map{
 			"Page":     "",
 			"Hosts":    hosts,
 			"Manifest": models.CachedVersionManifest,

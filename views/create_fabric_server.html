@@ -5,7 +5,29 @@
     <title>Create Server</title>
     <link href="/static/bootstrap/css/bootstrap.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/c476813bb3.js" crossorigin="anonymous"></script>
-    <link href="/static/styles.css" rel="stylesheet">
+    <style>
+        #directoryListing {
+            height: 300px;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: whitesmoke;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .directoryItem {
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .directoryItem button {
+            flex-grow: 1;
+            text-align: left;
+            margin-right: 5px;
+        }
+    </style>
 </head>
 <body>
 
@@ -21,7 +43,15 @@
                     <label for="nameInput" class="form-label">Server Name</label>
                     <input type="text" class="form-control" id="nameInput" name="name" required>
                 </div>
-                {{template "directory_listing"}}
+                <div class="mb-3">
+                    <label for="pathInput" class="form-label">Server Path</label>
+                    <p id="pathOutput">/</p>
+                    <div id="directoryListing" class="flex-column"></div>
+                    <div id="emptyDirectoryWarning" class="d-flex align-items-center mt-3">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        <span>Directory is not empty.</span>
+                    </div>
+                </div>
                 <div class="mb-3">
                     <label for="hostSelect" class="form-label">Host</label>
                     <select class="form-select" id="hostSelect" name="host" required>
@@ -54,16 +84,18 @@
 </div>
 
 <script src="/static/bootstrap/js/bootstrap.bundle.js"></script>
-<script src ="/static/directory_listing.js"></script>
 <script>
     const showSnapshotsCheck = document.getElementById('showSnapshotsCheck');
     const versionSelect = document.getElementById('versionSelect');
+    const directoryListing = document.getElementById('directoryListing');
+    const pathOutput = document.getElementById('pathOutput');
+    const emptyDirectoryWarning = document.getElementById('emptyDirectoryWarning');
     const versions = [];
     {{range .Manifest.Versions}}
-        versions.push({
-            id: '{{.ID}}',
-            type: '{{.Type}}'
-        });
+    versions.push({
+        id: '{{.ID}}',
+        type: '{{.Type}}'
+    });
     {{end}}
 
     showSnapshotsCheck.addEventListener('change', () => {
@@ -78,6 +110,48 @@
             }
         });
     });
+
+    function fetchDirectoryListing(hostId, path) {
+        if (path.startsWith("//")) {
+            path = path.substring(1);
+        }
+
+        fetch(`/app/hosts/${hostId}/directory?path=${encodeURIComponent(path)}`)
+            .then(response => response.json())
+            .then(data => {
+                let listingHtml = '';
+
+                if (!data) {
+                    data = [];
+                }
+
+                if (path !== '/') {
+                    const parentPath = path.substring(0, path.lastIndexOf('/'));
+                    listingHtml += `
+                        <div class="directoryItem">
+                            <button type="button" class="btn btn-secondary flex-fill" onclick="fetchDirectoryListing('${hostId}', '${parentPath}')">
+                                <i class="fas fa-folder"></i> ..
+                            </button>
+                        </div>
+                    `;
+                }
+
+                data.filter(entry => entry.isDir).forEach(directoryEntry => {
+                    listingHtml += `
+                        <div class="directoryItem">
+                            <button type="button" class="btn btn-secondary flex-fill" onclick="fetchDirectoryListing('${hostId}', '${path}/${directoryEntry.path}')">
+                                <i class="fas fa-folder"></i> ${directoryEntry.path}
+                            </button>
+                        </div>
+                    `;
+                });
+
+                directoryListing.innerHTML = listingHtml;
+                pathOutput.innerText = path;
+                emptyDirectoryWarning.classList.toggle('d-none', !data.length);
+                emptyDirectoryWarning.classList.toggle('d-flex', data.length);
+            });
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
         const hostSelect = document.getElementById('hostSelect');

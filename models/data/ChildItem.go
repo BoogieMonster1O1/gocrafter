@@ -1,4 +1,4 @@
-package models
+package data
 
 type ChildItem struct {
 	Path  string `json:"path"`
